@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>My DApp</title>
+  <script src="https://cdn.jsdelivr.net/npm/ethers/dist/ethers.umd.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      background-color: #f4f4f9;
+    }
+    .container {
+      display: flex;
+      justify-content: space-around;
+      width: 80%;
+      max-width: 1200px;
+    }
+    .column {
+      background-color: #ffffff;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 20px;
+      text-align: center;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      flex: 1;
+      margin: 10px;
+    }
+    button, input {
+      padding: 10px;
+      font-size: 16px;
+      margin-top: 10px;
+      border-radius: 5px;
+      border: 1px solid #ddd;
+      width: 100%;
+    }
+    #status {
+      margin-top: 20px;
+      font-size: 14px;
+      color: #333;
+    }
+    h2 {
+      font-size: 20px;
+      margin-bottom: 20px;
+      color: #444;
+    }
+    input {
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Connect Column -->
+    <div class="column">
+      <h2>Connect</h2>
+      <button onclick="connectMetaMask()">Connect Wallet</button>
+      <div id="status">Status: Not Connected</div>
+    </div>
+
+    <!-- Buy Column -->
+    <div class="column">
+      <h2>Buy Tokens</h2>
+      <input type="number" id="bnbAmountBuy" placeholder="Enter BNB amount" step="0.01" min="0">
+      <button onclick="buyTokens()">Buy Tokens</button>
+    </div>
+
+    <!-- Sell Column -->
+    <div class="column">
+      <h2>Sell Tokens</h2>
+      <input type="number" id="bnbAmountSell" placeholder="Enter BNB amount" step="0.01" min="0">
+      <button onclick="sellTokens()">Sell Tokens</button>
+    </div>
+  </div>
+
+  <!-- Load your app.js after Ethers.js -->
+  <script src="frontend/app.js"></script>
+</body>
+</html>

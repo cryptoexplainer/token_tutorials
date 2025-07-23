@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>BNB Token Voting DApp</title>
+  <script src="https://cdn.jsdelivr.net/npm/ethers/dist/ethers.umd.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f9f9fb;
+      --card: #ffffff;
+      --accent: #2563eb;
+      --accent-hover: #1e40af;
+      --border: #e0e0e0;
+      --text: #111827;
+    }
+
+    * {
+      box-sizing: border-box;
+      font-family: 'Inter', sans-serif;
+    }
+
+    body {
+      margin: 0;
+      background-color: var(--bg);
+      color: var(--text);
+      display: flex;
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      width: 240px;
+      background-color: #ffffff;
+      border-right: 1px solid var(--border);
+      padding: 2rem 1rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .sidebar h1 {
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+      color: var(--accent-hover);
+    }
+
+    .sidebar button {
+      width: 100%;
+      margin-top: 1rem;
+    }
+
+    .main {
+      flex: 1;
+      padding: 2rem;
+      max-width: 1200px;
+      margin: auto;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+      align-items: stretch;
+    }
+
+    .section {
+      background-color: var(--card);
+      padding: 1.5rem;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    h2 {
+      margin-top: 0;
+      margin-bottom: 1rem;
+    }
+
+    input {
+      padding: 10px;
+      margin: 5px 0;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 1rem;
+      width: 100%;
+    }
+
+    button {
+      background-color: var(--accent);
+      color: white;
+      border: none;
+      padding: 10px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: background-color 0.2s ease;
+      margin: 5px 0;
+    }
+
+    button:hover {
+      background-color: var(--accent-hover);
+    }
+
+    .proposal, .idea {
+      background-color: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      margin: 16px 0;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+    }
+
+    .proposal-title, .idea-title {
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    #wallet-address {
+      font-weight: 500;
+      margin-top: 1rem;
+      font-size: 0.95rem;
+      color: var(--accent-hover);
+    }
+
+    @media (max-width: 768px) {
+      body {
+        flex-direction: column;
+      }
+      .sidebar {
+        width: 100%;
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem;
+      }
+      .main {
+        padding: 1rem;
+      }
+      .sidebar h1 {
+        font-size: 1.2rem;
+        margin: 0;
+      }
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    button:disabled,
+    .disabled-button {
+        background-color: #ccc !important;
+        color: #666 !important;
+        cursor: not-allowed !important;
+    }
+  </style>
+</head>
+<body>
+  <div class="sidebar">
+    <div>
+      <h1>BNB Voting</h1>
+      <button onclick="connectWallet()">Connect Wallet</button>
+      <div id="wallet-address">Not connected</div>
+    </div>
+    <div style="font-size: 0.8rem; color: #aaa; margin-top: 2rem;">
+      &copy; 2025 YourProject
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="grid">
+      <!-- Proposals -->
+      <div class="section">
+        <h2>Proposals</h2>
+        <input id="desc" placeholder="Proposal description">
+        <input id="options" placeholder="Option1, Option2, Option3">
+        <input id="duration" type="number" value="600" placeholder="Seconds">
+        <button onclick="createProposal()">Submit Proposal</button>
+        <div id="proposals"></div>
+      </div>
+
+      <!-- Ideas -->
+      <div class="section">
+        <h2>Ideas</h2>
+        <input id="idea-desc" placeholder="Idea description">
+        <button onclick="submitIdea()">Submit Idea</button>
+        <div style="height: 103px;"></div>
+        <div id="ideas"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../frontend/voting.js"></script>
+</body>
+</html>
