@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>BNB Token Voting DApp</title>
-  <script src="https://cdn.jsdelivr.net/npm/ethers/dist/ethers.umd.min.js"></script>
+  <title>Wallet Connector</title>
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -114,11 +114,6 @@
       box-shadow: 0 2px 4px rgba(0,0,0,0.03);
     }
 
-    .proposal-title, .idea-title {
-      font-weight: 600;
-      margin-bottom: 6px;
-    }
-
     #wallet-address {
       font-weight: 500;
       margin-top: 1rem;
@@ -157,12 +152,57 @@
         color: #666 !important;
         cursor: not-allowed !important;
     }
+
+    .delete-btn {
+      background-color: transparent;
+      color: red;
+      font-size: 1.2rem;
+      border: none;
+      cursor: pointer;
+      padding: 0;
+      margin: 0;
+    }
+
+    .proposal-title, .idea-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      font-size: 1.05rem;
+    }
+
+    .app-header {
+      background-color: var(--card);
+      border-bottom: 1px solid var(--border);
+      padding: 2rem 2rem 1rem;
+      text-align: center;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+    }
+
+    .app-header h1 {
+      margin: 0;
+      font-size: 1.8rem;
+      color: var(--accent-hover);
+    }
+
+    .app-header p {
+      margin-top: 0.5rem;
+      font-size: 1rem;
+      color: #555;
+    }
+
+    .content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
   </style>
 </head>
 <body>
   <div class="sidebar">
     <div>
-      <h1>BNB Voting</h1>
+      <h1>Wallet Connector</h1>
       <button onclick="connectWallet()">Connect Wallet</button>
       <div id="wallet-address">Not connected</div>
     </div>
@@ -171,25 +211,32 @@
     </div>
   </div>
 
-  <div class="main">
-    <div class="grid">
-      <!-- Proposals -->
-      <div class="section">
-        <h2>Proposals</h2>
-        <input id="desc" placeholder="Proposal description">
-        <input id="options" placeholder="Option1, Option2, Option3">
-        <input id="duration" type="number" value="600" placeholder="Seconds">
-        <button onclick="createProposal()">Submit Proposal</button>
-        <div id="proposals"></div>
-      </div>
+  <div class="content">
+    <header class="app-header">
+      <h1>🚀 Medium Community Token Governance</h1>
+      <p>Shape the future of MECOT — vote, propose, and share ideas.</p>
+    </header>
 
-      <!-- Ideas -->
-      <div class="section">
-        <h2>Ideas</h2>
-        <input id="idea-desc" placeholder="Idea description">
-        <button onclick="submitIdea()">Submit Idea</button>
-        <div style="height: 103px;"></div>
-        <div id="ideas"></div>
+    <div class="main">
+      <div class="grid">
+        <!-- Proposals -->
+        <div class="section">
+          <h2>Proposals</h2>
+          <input id="desc" placeholder="Proposal description">
+          <input id="options" placeholder="Option1, Option2, Option3">
+          <input id="duration" type="number" value="600" placeholder="Seconds">
+          <button onclick="createProposal()">Submit Proposal</button>
+          <div id="proposals"></div>
+        </div>
+
+        <!-- Ideas -->
+        <div class="section">
+          <h2>Ideas</h2>
+          <input id="idea-desc" placeholder="Idea description">
+          <button onclick="submitIdea()">Submit Idea</button>
+          <div style="height: 103px;"></div>
+          <div id="ideas"></div>
+        </div>
       </div>
     </div>
   </div>
