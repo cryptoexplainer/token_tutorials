@@ -1,104 +1,185 @@
-const CONTRACT_ADDRESS = "0x279D5C686e9Aab14cfB3AdbBCd1F679951fe3DD4";
+// app.js
+let provider, signer, contract;
+let userAddress = "";
+let isOwner = false;
+
+const CONTRACT_ADDRESS = "0xC0E56A37220BfB65369aEb01Aab1FCc10CCe5e5B"; // Replace with your deployed contract address
 
 const ABI = [
-  "function createProposal(string,string[],uint256) public",
-  "function vote(uint256,uint8) public",
-  "function getProposal(uint256) view returns (string,string[],uint256[],uint256)",
+  "function createProposal(string,string[],uint256) external",
+  "function vote(uint256,uint8) external",
+  "function getProposal(uint256) view returns (string,string[],uint256[],uint256,bool)",
   "function totalProposals() view returns (uint256)",
   "function hasVoted(uint256,address) view returns (bool)",
-
-  "function createIdea(string) public",
-  "function upvoteIdea(uint256) public",
-  "function getIdea(uint256) view returns (string,uint256,uint256)",
+  "function createIdea(string) external",
+  "function upvoteIdea(uint256) external",
+  "function getIdea(uint256) view returns (string,uint256,bool)",
   "function totalIdeas() view returns (uint256)",
-  "function hasUpvoted(uint256,address) view returns (bool)"
+  "function hasUpvoted(uint256,address) view returns (bool)",
+  "function removeProposal(uint256) external",
+  "function removeIdea(uint256) external",
+  "function isOwner(address) view returns (bool)"
 ];
 
-let provider, signer, contract;
-
 async function connectWallet() {
-  if (!window.ethereum) return alert("Install MetaMask!");
-  provider = new ethers.BrowserProvider(window.ethereum);
-  signer = await provider.getSigner();
-  contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
-  const addr = await signer.getAddress();
-  document.getElementById("wallet-address").innerText = `Connected: ${addr.slice(0,6)}…${addr.slice(-4)}`;
-  loadProposals();
-  loadIdeas();
-}
+  if (window.ethereum) {
+    provider = new ethers.providers.Web3Provider(window.ethereum);
+    await provider.send("eth_requestAccounts", []);
+    signer = provider.getSigner();
+    userAddress = await signer.getAddress();
+    contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
+    // isOwner = await contract.isOwner(userAddress);
+    ioOwner = false;
 
-/* Proposal Logic */
-async function createProposal() {
-  const desc = document.getElementById("desc").value.trim();
-  const rawOpts = document.getElementById("options").value.trim();
-  const duration = parseInt(document.getElementById("duration").value);
-  if (!desc || !rawOpts || duration <= 0) return alert("Fill all fields");
-  const opts = rawOpts.split(",").map(o => o.trim()).filter(Boolean);
-  if (opts.length < 2 || opts.length > 5) return alert("Use 2–5 options");
-  const tx = await contract.createProposal(desc, opts, duration);
-  await tx.wait();
-  alert("Proposal created");
-  loadProposals();
-}
+    const truncated = userAddress.slice(0, 6) + "..." + userAddress.slice(-4);
+    const walletAddressEl = document.getElementById("wallet-address");
+    walletAddressEl.innerText = truncated;
+    walletAddressEl.title = userAddress;
 
-async function vote(id, index) {
-  const tx = await contract.vote(id, index);
-  await tx.wait();
-  alert("Vote submitted");
-  loadProposals();
-}
+    const connectBtn = document.querySelector("button[onclick='connectWallet()']");
+    connectBtn.disabled = true;
+    connectBtn.classList.add("disabled-button");
+    connectBtn.innerText = "Connected";
 
-async function loadProposals() {
-  const el = document.getElementById("proposals");
-  el.innerHTML = "";
-  const total = Number((await contract.totalProposals()).toString());
-  const addr = await signer.getAddress();
-  for (let i = total - 1; i >= 0; i--) {
-    const [desc, opts, votes, deadline] = await contract.getProposal(i);
-    const hasVoted = await contract.hasVoted(i, addr);
-    const active = Date.now() / 1000 < Number(deadline.toString());
-    let html = `<div class='proposal'><div class='proposal-title'>${desc}</div>`;
-    html += `<div>Ends: ${new Date(Number(deadline.toString())*1000).toLocaleString()}</div>`;
-    opts.forEach((opt, j) => {
-      const count = votes[j].toString();
-      const disabled = (!active || hasVoted) ? "disabled class='disabled-button'" : "";
-      html += `<div><button ${disabled} onclick='vote(${i},${j})'>${opt}</button> ${count}</div>`;
-    });
-    html += `</div>`;
-    el.innerHTML += html;
+    await loadProposals();
+    await loadIdeas();
+  } else {
+    alert("Please install MetaMask!");
   }
 }
 
-/* Idea Logic */
+async function createProposal() {
+  const desc = document.getElementById("desc").value;
+  const optionsRaw = document.getElementById("options").value;
+  const duration = parseInt(document.getElementById("duration").value);
+  const options = optionsRaw.split(",").map(opt => opt.trim()).filter(opt => opt);
+
+  if (options.length < 2 || options.length > 5) {
+    alert("Enter between 2 to 5 options.");
+    return;
+  }
+
+  await contract.createProposal(desc, options, duration);
+  loadProposals();
+}
+
 async function submitIdea() {
-  const desc = document.getElementById("idea-desc").value.trim();
-  if (!desc || duration <= 0) return alert("Fill all fields");
-  const tx = await contract.createIdea(desc);
-  await tx.wait();
-  alert("Idea submitted");
+  const desc = document.getElementById("idea-desc").value;
+  await contract.createIdea(desc);
   loadIdeas();
 }
 
-async function upvoteIdea(id) {
-  const tx = await contract.upvoteIdea(id);
-  await tx.wait();
-  alert("Idea upvoted");
-  loadIdeas();
+async function loadProposals() {
+  const container = document.getElementById("proposals");
+  container.innerHTML = "";
+  const total = await contract.totalProposals();
+
+  for (let i = total - 1; i >= 0; i--) {
+    const [desc, options, votes, deadline, deleted] = await contract.getProposal(i);
+    if (deleted) continue;
+
+    const hasVoted = await contract.hasVoted(i, userAddress);
+    const div = document.createElement("div");
+    div.className = "proposal";
+
+    const title = document.createElement("div");
+    title.className = "proposal-title";
+    title.textContent = desc;
+
+    if (isOwner) {
+      const del = document.createElement("button");
+      del.innerText = "❌";
+      del.className = "delete-btn";
+      del.addEventListener("click", async () => {
+        await contract.removeProposal(i);
+        loadProposals();
+      });
+      title.appendChild(del);
+    }
+
+    div.appendChild(title);
+
+    const now = Date.now() / 1000;
+    const votingEnded = now > deadline;
+
+    options.forEach((opt, idx) => {
+      const optionWrapper = document.createElement("div");
+      optionWrapper.style.marginBottom = "6px";
+
+      const optBtn = document.createElement("button");
+      optBtn.textContent = `${opt}: ${votes[idx]}`;
+      optBtn.style.width = "100%";
+      optBtn.style.textAlign = "left";
+
+      if (hasVoted || votingEnded) {
+        optBtn.disabled = true;
+        optBtn.classList.add("disabled-button");
+      } else {
+        optBtn.addEventListener("click", async () => {
+          await contract.vote(i, idx);
+          loadProposals();
+        });
+      }
+
+      optionWrapper.appendChild(optBtn);
+      div.appendChild(optionWrapper);
+    });
+
+    const end = document.createElement("div");
+    end.innerHTML = `<small>${votingEnded ? "Voting ended" : "Ends: " + new Date(deadline * 1000).toLocaleString()}</small>`;
+    div.appendChild(end);
+
+    container.appendChild(div);
+  }
 }
 
 async function loadIdeas() {
-  const el = document.getElementById("ideas");
-  el.innerHTML = "";
-  const total = Number((await contract.totalProposals()).toString());
-  const addr = await signer.getAddress();
+  const container = document.getElementById("ideas");
+  container.innerHTML = "";
+  const total = await contract.totalIdeas();
+
   for (let i = total - 1; i >= 0; i--) {
-    const [desc, upvotes, deadline] = await contract.getIdea(i);
-    const has = await contract.hasUpvoted(i, addr);
-    const disabled = (has) ? "disabled class='disabled-button'" : "";
-    el.innerHTML += `
-      <div class='idea'>
-        <div class='idea-title'>${desc}</div>
-        <div><button ${disabled} onclick='upvoteIdea(${i})'>Upvote</button> ${upvotes.toString()}</div>
-      </div>`;
+    const [desc, upvotes, deleted] = await contract.getIdea(i);
+    if (deleted) continue;
+
+    const hasUpvoted = await contract.hasUpvoted(i, userAddress);
+    const div = document.createElement("div");
+    div.className = "idea";
+
+    const title = document.createElement("div");
+    title.className = "proposal-title";
+    
+    const descSpan = document.createElement("span");
+    descSpan.textContent = desc;
+    title.appendChild(descSpan);
+    
+    if (isOwner) {
+      const del = document.createElement("button");
+      del.innerText = "❌";
+      del.className = "delete-btn";
+      del.addEventListener("click", async () => {
+        await contract.removeIdea(i);
+        loadProposals();
+      });
+      title.appendChild(del);
+    }
+
+    div.appendChild(title);
+
+    const voteLine = document.createElement("div");
+    voteLine.innerText = `Upvotes: ${upvotes}`;
+    div.appendChild(voteLine);
+
+    if (!hasUpvoted) {
+      const upvoteBtn = document.createElement("button");
+      upvoteBtn.innerText = "Upvote";
+      upvoteBtn.addEventListener("click", async () => {
+        await contract.upvoteIdea(i);
+        loadIdeas();
+      });
+      div.appendChild(upvoteBtn);
+    }
+
+    container.appendChild(div);
   }
 }
